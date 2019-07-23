@@ -1,4 +1,5 @@
 // Developed by Peter Sterckx
+// July 2019
 // petersterckx.com
 
 #include <Servo.h>
@@ -49,8 +50,6 @@ void setup() {
   }
 
   pos_number = 0;
-
-                                         
 
   for (int i = 0; i <= 2; i++) {                                   // determine initial positions of each joint
     y_last[i] = joint[i].read();
