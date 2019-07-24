@@ -17,6 +17,7 @@ int tog_teach = 2;
 int tog_auto = 3;
 bool toggle_now;
 bool toggle_last;
+bool first_point = false;
 int teach_points[num_of_points][4];
 int pos_number;
 int gripper_pin = 5;
@@ -24,6 +25,9 @@ float y;
 int pos_number_i;
 int open_deg = 130;
 int closed_deg = 20;
+
+unsigned long current_time;
+
 
 Servo joint[3];     
 Servo gripper;      
@@ -69,7 +73,17 @@ void loop() {
     y_last[i] = y_now[i];                                          
     angle[i] = map(y_now[i],0,1023,0,180);                         // map potentiometer reading input to an angle from 0 to 180 degrees
     joint[i].write(angle[i]);                                      // write the value to the servo to move the axis
+    current_time = millis();
+//    if (i == 0) {
+//      Serial.print(current_time);
+//      Serial.print(" ");
+//      Serial.print(x[i]);
+//      Serial.print(" ");
+//      Serial.println(y_now[i]);
+//    }
   }
+
+//  if (current_time > 10000) {delay(10000);}
 
   if (digitalRead(gripper_pin) == HIGH) {                          // open or close gripper depending on toggle state
     gripper.write(closed_deg); 
@@ -79,6 +93,7 @@ void loop() {
       
   if (digitalRead(tog_teach) == HIGH) {                            // teach currently position if teach button is pressed
     toggle_now = true;
+    first_point = true;
   } else if (digitalRead(tog_teach) == LOW) {
     toggle_now = false;
   }
@@ -89,6 +104,11 @@ void loop() {
 
     for (int i = 0; i <= 2; i++) {                                 
       teach_points[pos_number][i] = joint[i].read();               // read current servo positions and save to teach points array
+      Serial.print("Teaching joint ");
+      Serial.println(i+1);
+      Serial.print(" to position ");
+      Serial.println(teach_points[pos_number][i]);
+      Serial.println();
     }
   
     teach_points[pos_number][3] = gripper.read();
@@ -102,11 +122,17 @@ void loop() {
   
   toggle_last = toggle_now;
 
-  while (digitalRead(tog_auto) == HIGH) {                                                 // go into automatic mode if toggle is HIGH
+  while (digitalRead(tog_auto) == HIGH and first_point) {                                 // go into automatic mode if toggle is HIGH
     for (int pos_number_i = 0; pos_number_i <= num_of_points - 1; pos_number_i++) {
       for (int i = 0; i <= 2; i++) {
         if (teach_points[pos_number_i][i] != 0) {
           MoveTo(joint[i],teach_points[pos_number_i][i]);                                 // iterate through teach points array and move joints using MoveTo function
+          Serial.print("Joint ");
+          Serial.print(i+1);
+          Serial.print(" move to ");
+          Serial.println(teach_points[pos_number_i][i]);
+          Serial.println();
+          delay(100);  // debug   
         }
       }
       MoveTo(gripper,teach_points[pos_number_i][3]);
@@ -116,7 +142,7 @@ void loop() {
       for (int i = 0; i <= 2; i++) {
         x[i] = analogRead(potPins[i]);
         angle[i] = map(x[i],0,1023,0,180);
-        MoveTo(joint[i],angle[i]);
+        MoveTo(joint[i],angle[i]);                                             
        } 
       MoveTo(gripper,gripper.read());
       delay(1);
