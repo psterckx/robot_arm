@@ -100,7 +100,7 @@ void loop() {
   
   if (toggle_now and !toggle_last) {
 
-    delay(500);
+    delay(500);                           // ! COULD BE THE ISSUE
 
     for (int i = 0; i <= 2; i++) {                                 
       teach_points[pos_number][i] = joint[i].read();               // read current servo positions and save to teach points array
